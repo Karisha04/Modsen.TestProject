@@ -1,0 +1,6 @@
+@Modsen.TestProject.API_HostAddress = http://localhost:5106
+
+GET {{Modsen.TestProject.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
