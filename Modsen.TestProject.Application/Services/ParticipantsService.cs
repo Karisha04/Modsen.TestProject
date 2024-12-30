@@ -1,48 +1,67 @@
-﻿using Modsen.TestProject.Domain.Abstractions;
+﻿using FluentValidation;
+using Modsen.TestProject.Application.Contracts;
+using Modsen.TestProject.Application.UseCases;
+using Modsen.TestProject.Domain.Abstractions;
 using Modsen.TestProject.Domain.Models;
-using AutoMapper;
-using Modsen.TestProject.DAL.Entities;
-using Microsoft.EntityFrameworkCore;
-using Modsen.TestProject.DAL.Repositories;
-
 
 namespace Modsen.TestProject.Application.Services
 {
     public class ParticipantsService : IParticipantsService
     {
-        private readonly IParticipantsRepository _participantsRepository;
-        private readonly IMapper _mapper;
+        private readonly GetAllParticipantsUseCase _getAllParticipantsUseCase;
+        private readonly GetParticipantByIdUseCase _getParticipantByIdUseCase;
+        private readonly UpdateParticipantUseCase _updateParticipantUseCase;
+        private readonly DeleteParticipantUseCase _deleteParticipantUseCase;
+        private readonly CreateParticipantUseCase _createParticipantUseCase;
+        private readonly IValidator<ParticipantRequest> _participantValidator;
 
-        public ParticipantsService(IParticipantsRepository participantsRepository, IMapper mapper)
+        public ParticipantsService(
+            GetAllParticipantsUseCase getAllParticipantsUseCase,
+            GetParticipantByIdUseCase getParticipantByIdUseCase,
+            UpdateParticipantUseCase updateParticipantUseCase,
+            DeleteParticipantUseCase deleteParticipantUseCase,
+            CreateParticipantUseCase createParticipantUseCase,
+            IValidator<ParticipantRequest> participantValidator)
         {
-            _participantsRepository = participantsRepository;
-            _mapper = mapper;
+            _getAllParticipantsUseCase = getAllParticipantsUseCase;
+            _getParticipantByIdUseCase = getParticipantByIdUseCase;
+            _updateParticipantUseCase = updateParticipantUseCase;
+            _deleteParticipantUseCase = deleteParticipantUseCase;
+            _createParticipantUseCase = createParticipantUseCase;
+            _participantValidator = participantValidator;
         }
 
-        public async Task<List<Participant>> GetAllParticipants()
+        public async Task<List<Participant>> GetAllParticipants(CancellationToken cancellationToken)
+            => await _getAllParticipantsUseCase.Execute(cancellationToken);
+
+        public async Task<Participant> GetParticipantById(Guid id, CancellationToken cancellationToken)
+            => await _getParticipantByIdUseCase.Execute(id, cancellationToken);
+
+        public async Task<Guid> UpdateParticipant(Guid id, string firstName, string lastName, DateTime birthDate, DateTime registrationDate, string email, Guid newEventId, CancellationToken cancellationToken)
         {
-            return await _participantsRepository.Get();
-        }
-        public async Task<Participant> GetParticipantById(Guid id)
-        {
-            return await _participantsRepository.GetById(id);
+            var participantRequest = new ParticipantRequest(firstName, lastName, birthDate, registrationDate, email, newEventId);
+            var validationResult = await _participantValidator.ValidateAsync(participantRequest, cancellationToken);
+            if (!validationResult.IsValid)
+            {
+                throw new ValidationException(validationResult.Errors);
+            }
+            return await _updateParticipantUseCase.Execute(id, firstName, lastName, birthDate, registrationDate, email, newEventId, cancellationToken);
         }
 
-        public async Task<Guid> UpdateParticipant(Guid id, string firstName, string lastName, DateTime birthDate, DateTime registrationDate, string email, Guid newEventId)
+
+        public async Task<Guid> DeleteParticipant(Guid id, CancellationToken cancellationToken)
+            => await _deleteParticipantUseCase.Execute(id, cancellationToken);
+
+        public async Task<Guid> CreateParticipant(Participant participant, CancellationToken cancellationToken)
         {
-            return await _participantsRepository.Update(id, firstName, lastName, birthDate, registrationDate, email, newEventId);
+            var participantRequest = new ParticipantRequest(participant.FirstName, participant.LastName, participant.BirthDate, participant.RegistrationDate, participant.Email, participant.NewEventId); // Передаем все необходимые параметры
+            var validationResult = await _participantValidator.ValidateAsync(participantRequest, cancellationToken);
+            if (!validationResult.IsValid)
+            {
+                throw new ValidationException(validationResult.Errors);
+            }
+            return await _createParticipantUseCase.Execute(participant, cancellationToken);
         }
 
-        public async Task<Guid> DeleteParticipant(Guid id)
-        {
-            return await _participantsRepository.Delete(id);
-        }
-
-        public async Task<Guid> CreateParticipant(Participant participant)
-        {
-            var participantEntity = _mapper.Map<Participant>(participant);
-
-            return await _participantsRepository.Create(participantEntity);
-        }
     }
 }

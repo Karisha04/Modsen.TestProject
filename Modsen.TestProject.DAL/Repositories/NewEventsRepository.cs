@@ -1,5 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Modsen.TestProject.DAL.Entities;
+using Modsen.TestProject.Domain.Interfaces;
 using Modsen.TestProject.Domain.Models;
 
 namespace Modsen.TestProject.DAL.Repositories
@@ -7,75 +9,35 @@ namespace Modsen.TestProject.DAL.Repositories
     public class NewEventsRepository : INewEventsRepository
     {
         private readonly ProjectDbContext _context;
+        private readonly IMapper _mapper;
 
-        public NewEventsRepository(ProjectDbContext context)
+        public NewEventsRepository(ProjectDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
-        public async Task<List<NewEvent>> Get()
+        public async Task<List<NewEvent>> Get(CancellationToken cancellationToken)
         {
             var newEventEntities = await _context.NewEvents
                 .AsNoTracking()
-                .Include(e => e.Participants) 
-                .ToListAsync();
+                .Include(e => e.Participants)
+                .ToListAsync(cancellationToken);
 
-            var newEvents = newEventEntities
-                .Select(MapToDomainModel) 
-                .ToList();
-
-            return newEvents;
+            return _mapper.Map<List<NewEvent>>(newEventEntities);
         }
 
-        public async Task<Guid> Create(NewEvent newEvent)
+        public async Task<Guid> Create(NewEvent newEvent, CancellationToken cancellationToken)
         {
-            var participantEntities = newEvent.Participants.Select(p => new ParticipantEntity
-            {
-                Id = p.Id,
-                FirstName = p.FirstName,
-                LastName = p.LastName,
-                BirthDate = p.BirthDate,
-                RegistrationDate = p.RegistrationDate,
-                Email = p.Email,
-                NewEventId = newEvent.Id
-            }).ToList();
-
-            var newEventEntity = new NewEventEntity
-            {
-                Id = newEvent.Id,
-                Name = newEvent.Name,
-                Description = newEvent.Description,
-                DateAndTime = newEvent.DateAndTime,
-                Place = newEvent.Place,
-                Category = newEvent.Category,
-                MaxParticipant = newEvent.MaxParticipant,
-                Participants = participantEntities,
-                ImagePath = newEvent.ImagePath
-            };
-
-            await _context.NewEvents.AddAsync(newEventEntity);
-            await _context.SaveChangesAsync();
-
+            var newEventEntity = _mapper.Map<NewEventEntity>(newEvent);
+            await _context.NewEvents.AddAsync(newEventEntity, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
             return newEventEntity.Id;
         }
 
-        public async Task<Guid> Update(Guid id, string name, string description, DateTime dateAndTime, string place, string category, int maxParticipant, ICollection<Participant> participants, string imagePath)
+        public async Task<Guid> Update(Guid id, string name, string description, DateTime dateAndTime, string place, string category, int maxParticipant, ICollection<Participant> participants, string imagePath, CancellationToken cancellationToken)
         {
-            var participantEntities = participants.Select(p => new ParticipantEntity
-            {
-                Id = p.Id,
-                FirstName = p.FirstName,
-                LastName = p.LastName,
-                BirthDate = p.BirthDate,
-                RegistrationDate = p.RegistrationDate,
-                Email = p.Email,
-                NewEventId = p.NewEventId
-            }).ToList();
-
-            var newEventEntity = await _context.NewEvents
-                .Where(b => b.Id == id)
-                .FirstOrDefaultAsync();
-
+            var newEventEntity = await _context.NewEvents.FindAsync(new object[] { id }, cancellationToken);
             if (newEventEntity != null)
             {
                 newEventEntity.Name = name;
@@ -84,125 +46,77 @@ namespace Modsen.TestProject.DAL.Repositories
                 newEventEntity.Place = place;
                 newEventEntity.Category = category;
                 newEventEntity.MaxParticipant = maxParticipant;
-                newEventEntity.Participants = participantEntities;
                 newEventEntity.ImagePath = imagePath;
+                newEventEntity.Participants = _mapper.Map<List<ParticipantEntity>>(participants);
 
-                await _context.SaveChangesAsync();
-            }
-
-            return id;
-        }
-
-        public async Task<Guid> Delete(Guid id)
-        {
-            var newEvent = await _context.NewEvents.FindAsync(id);
-            if (newEvent != null)
-            {
-                _context.NewEvents.Remove(newEvent);
-                await _context.SaveChangesAsync();
+                _context.Update(newEventEntity);
+                await _context.SaveChangesAsync(cancellationToken);
             }
             return id;
         }
 
-        public async Task<NewEvent> GetById(Guid id)
+        public async Task<Guid> Delete(Guid id, CancellationToken cancellationToken)
         {
-            var newEventEntity = await _context.NewEvents
-                .Include(e => e.Participants)
-                .FirstOrDefaultAsync(e => e.Id == id);
-
-            return newEventEntity != null ? MapToDomainModel(newEventEntity) : null;
-        }
-
-        public async Task<NewEvent> GetByName(string name)
-        {
-            var newEventEntity = await _context.NewEvents
-                .Include(e => e.Participants)
-                .FirstOrDefaultAsync(e => e.Name == name);
-
-            return newEventEntity != null ? MapToDomainModel(newEventEntity) : null;
-        }
-
-        public async Task UpdateEvent(NewEvent newEvent)
-        {
-            var newEventEntity = new NewEventEntity
+            var newEventEntity = await _context.NewEvents.FindAsync(new object[] { id }, cancellationToken);
+            if (newEventEntity != null)
             {
-                Id = newEvent.Id,
-                Name = newEvent.Name,
-                Description = newEvent.Description,
-                DateAndTime = newEvent.DateAndTime,
-                Place = newEvent.Place,
-                Category = newEvent.Category,
-                MaxParticipant = newEvent.MaxParticipant,
-                ImagePath = newEvent.ImagePath,
-                Participants = newEvent.Participants.Select(p => new ParticipantEntity
-                {
-                    Id = p.Id,
-                    FirstName = p.FirstName,
-                    LastName = p.LastName,
-                    BirthDate = p.BirthDate,
-                    RegistrationDate = p.RegistrationDate,
-                    Email = p.Email,
-                    NewEventId = p.NewEventId
-                }).ToList()
-            };
-
-            _context.Update(newEventEntity);
-            await _context.SaveChangesAsync();
+                _context.NewEvents.Remove(newEventEntity);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            return id;
         }
 
-        
-        private NewEvent MapToDomainModel(NewEventEntity newEventEntity)
+        public async Task<NewEvent> GetById(Guid id, CancellationToken cancellationToken)
         {
-            return NewEvent.Create(
-                newEventEntity.Id,
-                newEventEntity.Name,
-                newEventEntity.Description,
-                newEventEntity.DateAndTime,
-                newEventEntity.Place,
-                newEventEntity.Category,
-                newEventEntity.MaxParticipant,
-                newEventEntity.Participants.Select(p =>
-                    new Participant(
-                        p.Id,
-                        p.FirstName,
-                        p.LastName,
-                        p.BirthDate,
-                        p.RegistrationDate,
-                        p.Email,
-                        newEventEntity.Id
-                    )).ToList(),
-                newEventEntity.ImagePath
-            ).NewEvent;
+            var newEventEntity = await _context.NewEvents
+                .AsNoTracking()
+                .Include(e => e.Participants)
+                .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+
+            return _mapper.Map<NewEvent>(newEventEntity);
         }
 
-        public async Task<IEnumerable<NewEvent>> GetFilteredEventsAsync(DateTime? date, string place, string category)
+        public async Task<NewEvent> GetByName(string name, CancellationToken cancellationToken)
+        {
+            var newEventEntity = await _context.NewEvents
+                .AsNoTracking()
+                .Include(e => e.Participants)
+                .FirstOrDefaultAsync(e => e.Name == name, cancellationToken);
+
+            return _mapper.Map<NewEvent>(newEventEntity);
+        }
+
+        public async Task<IEnumerable<NewEvent>> GetFilteredEventsAsync(DateTime? date, string place, string category, CancellationToken cancellationToken)
         {
             var query = _context.NewEvents
                 .AsNoTracking()
-                .Include(e => e.Participants) 
+                .Include(e => e.Participants)
                 .AsQueryable();
 
             if (date.HasValue)
-            {
                 query = query.Where(e => e.DateAndTime.Date == date.Value.Date);
-            }
 
             if (!string.IsNullOrWhiteSpace(place))
-            {
                 query = query.Where(e => e.Place.Contains(place));
-            }
 
             if (!string.IsNullOrWhiteSpace(category))
-            {
                 query = query.Where(e => e.Category.Contains(category));
+
+            var eventEntities = await query.ToListAsync(cancellationToken);
+
+            return _mapper.Map<IEnumerable<NewEvent>>(eventEntities);
+        }
+        public async Task UpdateEvent(NewEvent newEvent, CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
             }
 
-            var eventEntities = await query.ToListAsync();
+            var newEventEntity = _mapper.Map<NewEventEntity>(newEvent);
 
-            return eventEntities.Select(MapToDomainModel);
+            _context.NewEvents.Update(newEventEntity);
+            await _context.SaveChangesAsync(cancellationToken);
         }
-
-
-
     }
 }

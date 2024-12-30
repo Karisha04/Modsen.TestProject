@@ -1,6 +1,6 @@
 ﻿using Modsen.TestProject.Domain.Models;
 
-namespace Modsen.TestProject.API.Contracts
+namespace Modsen.TestProject.Application.Contracts
 {
     public record NewEventsResponse(
         Guid id,

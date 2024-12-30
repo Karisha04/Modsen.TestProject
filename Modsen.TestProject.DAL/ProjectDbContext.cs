@@ -1,5 +1,6 @@
 ﻿using Modsen.TestProject.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
+using Modsen.TestProject.DAL.Configurations;
 
 namespace Modsen.TestProject.DAL
 {
@@ -17,16 +18,8 @@ namespace Modsen.TestProject.DAL
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<NewEventEntity>(entity =>
-            {
-                entity.Property(e => e.Name)
-                    .IsRequired(); 
-            });
-
-            modelBuilder.Entity<ParticipantEntity>()
-                .HasOne(p => p.NewEvent)
-                .WithMany(e => e.Participants)
-                .HasForeignKey(p => p.NewEventId);
+            modelBuilder.ApplyConfiguration(new NewEventConfiguration());
+            modelBuilder.ApplyConfiguration(new ParticipantConfiguration());
         }
     }
 }

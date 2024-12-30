@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace Modsen.TestProject.Domain.Models
+﻿namespace Modsen.TestProject.Domain.Models
 {
     public class Participant
     {
-        public const int MAX_NAME_LENGTH = 100; 
+        public const int MAX_NAME_LENGTH = 100;
 
         public Participant(Guid id, string firstName, string lastName, DateTime birthDate, DateTime registrationDate, string email, Guid newEventId)
         {
@@ -23,7 +21,7 @@ namespace Modsen.TestProject.Domain.Models
         public DateTime BirthDate { get; set; }
         public DateTime RegistrationDate { get; set; }
         public string Email { get; set; }
-        public Guid NewEventId { get; set; } 
+        public Guid NewEventId { get; set; }
 
         public static (Participant Participant, string Error) Create(Guid id, string firstName, string lastName, DateTime birthDate, DateTime registrationDate, string email, Guid newEventId)
         {

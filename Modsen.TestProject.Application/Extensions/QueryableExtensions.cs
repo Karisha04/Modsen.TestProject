@@ -1,11 +1,6 @@
-﻿using Modsen.TestProject.Domain.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Modsen.TestProject.Application.Models;
 
-namespace Modsen.TestProject.Domain.Extensions
+namespace Modsen.TestProject.Application.Extensions
 {
     public static class QueryableExtensions
     {
