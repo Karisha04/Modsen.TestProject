@@ -1,21 +1,23 @@
-﻿using Modsen.TestProject.DAL.Repositories;
+﻿using Modsen.TestProject.Domain.Interfaces;
 using Modsen.TestProject.Domain.Models;
+using Modsen.TestProject.Domain.UnitOfWork;
 
 namespace Modsen.TestProject.DAL.UnitOfWork
 {
     public class UnitOfWork : IUnitOfWork
     {
         private readonly ProjectDbContext _context;
+        public IRepository<NewEvent> NewEventRepository { get; }
+        public IRepository<Participant> ParticipantRepository { get; }
 
-        private IRepository<NewEvent> _newEventRepository;
-
-        public UnitOfWork(ProjectDbContext context)
+        public UnitOfWork(ProjectDbContext context,
+                          IRepository<NewEvent> newEventRepository,
+                          IRepository<Participant> participantRepository)
         {
             _context = context;
+            NewEventRepository = newEventRepository;
+            ParticipantRepository = participantRepository;
         }
-
-        public IRepository<NewEvent> NewEventRepository
-            => _newEventRepository ??= new Repository<NewEvent>(_context);
 
         public async Task<int> CompleteAsync()
         {

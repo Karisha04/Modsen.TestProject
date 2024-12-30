@@ -4,7 +4,7 @@
     {
         public const int MAX_NAME_LENGTH = 300;
         public NewEvent() { }
-        private NewEvent( Guid id, string name, string description, DateTime dateAndTime, string place, string category, int maxParticipant, ICollection<Participant> participants, string imagePath) 
+        public NewEvent( Guid id, string name, string description, DateTime dateAndTime, string place, string category, int maxParticipant, ICollection<Participant> participants, string imagePath) 
         { 
             Id= id;
             Name = name;
