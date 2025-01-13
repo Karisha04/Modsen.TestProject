@@ -6,12 +6,12 @@ using Modsen.TestProject.Domain.Models;
 
 namespace Modsen.TestProject.DAL.Repositories
 {
-    public class NewEventsRepository : INewEventsRepository
+    public class NewEventsRepository : Repository<NewEventEntity>, INewEventsRepository
     {
         private readonly ProjectDbContext _context;
         private readonly IMapper _mapper;
 
-        public NewEventsRepository(ProjectDbContext context, IMapper mapper)
+        public NewEventsRepository(ProjectDbContext context, IMapper mapper) : base(context)
         {
             _context = context;
             _mapper = mapper;
@@ -26,46 +26,12 @@ namespace Modsen.TestProject.DAL.Repositories
 
             return _mapper.Map<List<NewEvent>>(newEventEntities);
         }
-
         public async Task<Guid> Create(NewEvent newEvent, CancellationToken cancellationToken)
         {
             var newEventEntity = _mapper.Map<NewEventEntity>(newEvent);
             await _context.NewEvents.AddAsync(newEventEntity, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
             return newEventEntity.Id;
         }
-
-        public async Task<Guid> Update(Guid id, string name, string description, DateTime dateAndTime, string place, string category, int maxParticipant, ICollection<Participant> participants, string imagePath, CancellationToken cancellationToken)
-        {
-            var newEventEntity = await _context.NewEvents.FindAsync(new object[] { id }, cancellationToken);
-            if (newEventEntity != null)
-            {
-                newEventEntity.Name = name;
-                newEventEntity.Description = description;
-                newEventEntity.DateAndTime = dateAndTime;
-                newEventEntity.Place = place;
-                newEventEntity.Category = category;
-                newEventEntity.MaxParticipant = maxParticipant;
-                newEventEntity.ImagePath = imagePath;
-                newEventEntity.Participants = _mapper.Map<List<ParticipantEntity>>(participants);
-
-                _context.Update(newEventEntity);
-                await _context.SaveChangesAsync(cancellationToken);
-            }
-            return id;
-        }
-
-        public async Task<Guid> Delete(Guid id, CancellationToken cancellationToken)
-        {
-            var newEventEntity = await _context.NewEvents.FindAsync(new object[] { id }, cancellationToken);
-            if (newEventEntity != null)
-            {
-                _context.NewEvents.Remove(newEventEntity);
-                await _context.SaveChangesAsync(cancellationToken);
-            }
-            return id;
-        }
-
         public async Task<NewEvent> GetById(Guid id, CancellationToken cancellationToken)
         {
             var newEventEntity = await _context.NewEvents
@@ -84,6 +50,12 @@ namespace Modsen.TestProject.DAL.Repositories
                 .FirstOrDefaultAsync(e => e.Name == name, cancellationToken);
 
             return _mapper.Map<NewEvent>(newEventEntity);
+        }
+        public async Task<Guid> Update(NewEvent newEvent, CancellationToken cancellationToken)
+        {
+            var newEventEntity = _mapper.Map<Entities.NewEventEntity>(newEvent);
+            _context.NewEvents.Update(newEventEntity);
+            return newEventEntity.Id;
         }
 
         public async Task<IEnumerable<NewEvent>> GetFilteredEventsAsync(DateTime? date, string place, string category, CancellationToken cancellationToken)
@@ -106,17 +78,18 @@ namespace Modsen.TestProject.DAL.Repositories
 
             return _mapper.Map<IEnumerable<NewEvent>>(eventEntities);
         }
+
+        public async Task<Guid> Delete(Guid id, CancellationToken cancellationToken)
+        {
+            var newEventEntity = new NewEventEntity { Id = id };  
+            _context.NewEvents.Remove(newEventEntity);  
+            return newEventEntity.Id;  
+        }
+
         public async Task UpdateEvent(NewEvent newEvent, CancellationToken cancellationToken)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-            }
-
-            var newEventEntity = _mapper.Map<NewEventEntity>(newEvent);
-
-            _context.NewEvents.Update(newEventEntity);
-            await _context.SaveChangesAsync(cancellationToken);
+            var newEventEntity = _mapper.Map<NewEventEntity>(newEvent);  
+            _context.NewEvents.Update(newEventEntity);  
         }
     }
 }

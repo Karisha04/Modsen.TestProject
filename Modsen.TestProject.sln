@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Modsen.TestProject.DAL", "M
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Modsen.TestProject.Application", "Modsen.TestProject.Application\Modsen.TestProject.Application.csproj", "{A74C4370-10F7-4B7F-B999-1C6529E2C03B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Modsen.TestProject.Tests", "Modsen.TestProject.Tests\Modsen.TestProject.Tests.csproj", "{5C134894-1AED-4625-AA5B-04481BCD6AF3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Modsen.TestProject.Tests", "Modsen.TestProject.Tests\Modsen.TestProject.Tests.csproj", "{5C134894-1AED-4625-AA5B-04481BCD6AF3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

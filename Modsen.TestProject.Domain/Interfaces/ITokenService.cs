@@ -2,7 +2,8 @@
 {
     public interface ITokenService
     {
-        string GenerateToken(string username, string role);
+        string GenerateAccessToken(string username, string role);
+        string GenerateRefreshToken();
+        (string accessToken, string refreshToken) RefreshTokens(string refreshToken);
     }
-
 }

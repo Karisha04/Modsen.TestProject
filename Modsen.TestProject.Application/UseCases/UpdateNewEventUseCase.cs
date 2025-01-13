@@ -11,9 +11,9 @@ public class UpdateNewEventUseCase
     }
 
     public async Task<Guid> Execute(
-        Guid id, string name, string description, DateTime dateAndTime, string place, string category,
-        int maxParticipant, ICollection<Participant> participants, string imagePath,
-        CancellationToken cancellationToken)
+    Guid id, string name, string description, DateTime dateAndTime, string place, string category,
+    int maxParticipant, ICollection<Participant> participants, string imagePath,
+    CancellationToken cancellationToken)
     {
         var existingEvent = await _newEventsRepository.GetById(id, cancellationToken);
         if (existingEvent == null)
@@ -27,7 +27,17 @@ public class UpdateNewEventUseCase
             throw new InvalidOperationException($"An event with the name '{name}' already exists.");
         }
 
-        return await _newEventsRepository.Update(id, name, description, dateAndTime, place, category,
-                                                  maxParticipant, participants, imagePath, cancellationToken);
+        existingEvent.Name = name;
+        existingEvent.Description = description;
+        existingEvent.DateAndTime = dateAndTime;
+        existingEvent.Place = place;
+        existingEvent.Category = category;
+        existingEvent.MaxParticipant = maxParticipant;
+        existingEvent.Participants = participants;
+        existingEvent.ImagePath = imagePath;
+
+        return await _newEventsRepository.Update(existingEvent, cancellationToken);
     }
+
+
 }

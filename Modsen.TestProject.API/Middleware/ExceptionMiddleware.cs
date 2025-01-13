@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Net;
 using Newtonsoft.Json;
 
 namespace Modsen.TestProject.API.Middleware
@@ -27,17 +28,31 @@ namespace Modsen.TestProject.API.Middleware
         private Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            var statusCode = MapExceptionToStatusCode(exception);
+
+            context.Response.StatusCode = statusCode;
 
             var response = new
             {
                 StatusCode = context.Response.StatusCode,
-                Message = "Internal Server Error from the middleware.",
-                Detailed = exception.Message 
+                Message = exception.Message,
+                Detailed = exception.GetType().Name
             };
 
             var jsonResponse = JsonConvert.SerializeObject(response);
             return context.Response.WriteAsync(jsonResponse);
+        }
+
+        private int MapExceptionToStatusCode(Exception exception)
+        {
+            return exception switch
+            {
+                ArgumentException or ValidationException => (int)HttpStatusCode.BadRequest,
+                UnauthorizedAccessException => (int)HttpStatusCode.Forbidden,
+                KeyNotFoundException => (int)HttpStatusCode.NotFound,
+                InvalidOperationException => (int)HttpStatusCode.Conflict,
+                _ => (int)HttpStatusCode.InternalServerError,
+            };
         }
     }
 }

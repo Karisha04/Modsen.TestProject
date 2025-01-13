@@ -4,11 +4,11 @@ using Modsen.TestProject.Application.Contracts;
 
 namespace Modsen.TestProject.Application.Mappings
 {
-    public class ParticipantMappingProfile : Profile
+    public class ParticipantEntityMappingProfile : Profile
     {
-        public ParticipantMappingProfile()
+        public ParticipantEntityMappingProfile()
         {
-            CreateMap<Participant, ParticipantResponse>();
+            CreateMap<ParticipantRequest, Participant>();
         }
     }
 }

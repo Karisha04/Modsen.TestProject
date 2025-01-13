@@ -19,4 +19,6 @@ public class DeleteNewEventUseCase
 
         return await _newEventsRepository.Delete(id, cancellationToken);
     }
+    
+
 }

@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Modsen.TestProject.Domain.Models;
-using Modsen.TestProject.DAL.Entities;
+using Modsen.TestProject.Application.Contracts;
 
 namespace Modsen.TestProject.Application.Mappings
 {
@@ -8,9 +8,8 @@ namespace Modsen.TestProject.Application.Mappings
     {
         public NewEventMappingProfile()
         {
-            CreateMap<NewEventEntity, NewEvent>()
-                .ForMember(dest => dest.Participants, opt => opt.MapFrom(src => src.Participants));
-            CreateMap<NewEvent, NewEventEntity>();
+            
+            CreateMap<NewEvent, NewEventsResponse>();
         }
     }
 }

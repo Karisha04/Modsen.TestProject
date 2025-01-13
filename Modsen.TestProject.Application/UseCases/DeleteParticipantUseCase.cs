@@ -19,7 +19,8 @@ namespace Modsen.TestProject.Application.UseCases
                 throw new KeyNotFoundException($"Participant with ID '{id}' not found.");
             }
 
-            return await _participantsRepository.Delete(id, cancellationToken);
+            return await _participantsRepository.Delete(existingParticipant, cancellationToken);
         }
     }
+
 }

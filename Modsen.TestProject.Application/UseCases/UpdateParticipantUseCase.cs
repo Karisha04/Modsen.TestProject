@@ -23,6 +23,14 @@ public class UpdateParticipantUseCase
             throw new InvalidOperationException($"A participant with the email '{email}' already exists.");
         }
 
-        return await _participantsRepository.Update(id, firstName, lastName, birthDate, registrationDate, email, newEventId, cancellationToken);
+        existingParticipant.FirstName = firstName;
+        existingParticipant.LastName = lastName;
+        existingParticipant.BirthDate = birthDate;
+        existingParticipant.RegistrationDate = registrationDate;
+        existingParticipant.Email = email;
+        existingParticipant.NewEventId = newEventId;
+
+        return await _participantsRepository.Update(existingParticipant, cancellationToken);
     }
+
 }
